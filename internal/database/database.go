@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/kontik-pk/go-musthave-diploma-tpl/cmd/gophermart/internal/models"
+	"github.com/kontik-pk/go-musthave-diploma-tpl/internal/models"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 )
@@ -16,7 +16,7 @@ func (m *Manager) GetBalanceInfo(login string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error while getting current user userBalance: %w", err)
 	}
-	const getUserWithdrawn = "select sum(amount) as withdrawn from withdraw where login = $1"
+	getUserWithdrawn := "select sum(amount) as withdrawn from withdraw where login = $1"
 	row := m.db.QueryRow(getUserWithdrawn, login)
 	var userWithdrawn sql.NullFloat64
 	if err = row.Scan(&userWithdrawn); err != nil {
@@ -40,7 +40,7 @@ func (m *Manager) GetBalanceInfo(login string) ([]byte, error) {
 }
 
 func (m *Manager) GetWithdrawals(login string) ([]byte, error) {
-	const getUserWithdrawals = `select order_id, amount, processed_at from withdraw where login = $1 order by processed_at`
+	getUserWithdrawals := `select order_id, amount, processed_at from withdraw where login = $1 order by processed_at`
 	rows, err := m.db.Query(getUserWithdrawals, login)
 	if err != nil {
 		return nil, fmt.Errorf("error while searching for userWithdrawals: %w", err)
@@ -84,7 +84,7 @@ func (m *Manager) Withdraw(login string, orderID string, sum float64) error {
 	if userBalance < sum {
 		return ErrInsufficientBalance
 	}
-	const withdraw = "insert into withdraw values ($1, $2, now(), $3)"
+	withdraw := "insert into withdraw values ($1, $2, now(), $3)"
 	if _, err = m.db.Exec(withdraw, login, orderID, sum); err != nil {
 		return fmt.Errorf("error while trying to withdraw: %w", err)
 	}
@@ -92,7 +92,7 @@ func (m *Manager) Withdraw(login string, orderID string, sum float64) error {
 }
 
 func (m *Manager) GetUserOrders(login string) ([]byte, error) {
-	const getUserOrders = `select order_id, status, accrual, uploaded_at from orders where login = $1`
+	getUserOrders := `select order_id, status, accrual, uploaded_at from orders where login = $1`
 	rows, err := m.db.Query(getUserOrders, login)
 	if err != nil {
 		return nil, fmt.Errorf("error while getting orders from db for user %q: %w", login, err)
@@ -130,7 +130,7 @@ func (m *Manager) GetUserOrders(login string) ([]byte, error) {
 	return result, nil
 }
 func (m *Manager) GetAllOrders() ([]string, error) {
-	const getAllOrders = `select order_id from orders`
+	getAllOrders := `select order_id from orders`
 	rows, err := m.db.Query(getAllOrders)
 	if err != nil {
 		return nil, fmt.Errorf("error while getting all orders from db: %w", err)
@@ -152,7 +152,7 @@ func (m *Manager) GetAllOrders() ([]string, error) {
 }
 
 func (m *Manager) UpdateOrderInfo(orderInfo *models.OrderInfo) error {
-	const updateOrderInfo = `update orders set status=$1, accrual=$2 where order_id=$3`
+	updateOrderInfo := `update orders set status=$1, accrual=$2 where order_id=$3`
 	if _, err := m.db.Exec(updateOrderInfo, string(orderInfo.Status), orderInfo.Accrual, orderInfo.Order); err != nil {
 		return fmt.Errorf("error while updating order info: %w", err)
 	}
@@ -160,14 +160,14 @@ func (m *Manager) UpdateOrderInfo(orderInfo *models.OrderInfo) error {
 }
 
 func (m *Manager) LoadOrder(login string, orderID string) error {
-	const getOrderByID = `select login from orders where order_id = $1`
+	getOrderByID := `select login from orders where order_id = $1`
 	row := m.db.QueryRow(getOrderByID, orderID)
 
 	var userName string
 	err := row.Scan(&userName)
 	switch err {
 	case sql.ErrNoRows:
-		const loadOrderQuery = `insert into orders values ($1, $2, now(), $3, $4)`
+		loadOrderQuery := `insert into orders values ($1, $2, now(), $3, $4)`
 		if _, err = m.db.Exec(loadOrderQuery, orderID, login, models.OrderStatus("NEW"), 0); err != nil {
 			return fmt.Errorf("error while loading order %s: %w", orderID, err)
 		}
@@ -187,7 +187,7 @@ func (m *Manager) Register(login string, password string) error {
 	if err != nil {
 		return fmt.Errorf("this password is not allowed: %w", err)
 	}
-	const registerUser = `insert into registered_users values ($1, $2)`
+	registerUser := `insert into registered_users values ($1, $2)`
 	if _, err = m.db.Exec(registerUser, login, hash); err != nil {
 		dublicateKeyErr := ErrDublicateKey{Key: "registered_users_pkey"}
 		if err.Error() == dublicateKeyErr.Error() {
@@ -199,7 +199,7 @@ func (m *Manager) Register(login string, password string) error {
 }
 
 func (m *Manager) Login(login string, password string) error {
-	const getRegisteredUser = `select login, password from registered_users`
+	getRegisteredUser := `select login, password from registered_users`
 	rows, err := m.db.Query(getRegisteredUser)
 	if err != nil {
 		return fmt.Errorf("error while executing search query: %w", err)
@@ -224,7 +224,7 @@ func (m *Manager) Login(login string, password string) error {
 }
 
 func (m *Manager) getUserBalance(login string) (float64, error) {
-	const getUserBalance = "select coalesce(sum(accrual), 0) - coalesce(sum(amount), 0) as balance from orders o left join withdraw w on o.login = w.login where o.login = $1 group by o.login;"
+	getUserBalance := "select coalesce(sum(accrual), 0) - coalesce(sum(amount), 0) as balance from orders o left join withdraw w on o.login = w.login where o.login = $1 group by o.login;"
 	row := m.db.QueryRow(getUserBalance, login)
 	var balance sql.NullFloat64
 	if err := row.Scan(&balance); err != nil {
@@ -237,15 +237,15 @@ func (m *Manager) getUserBalance(login string) (float64, error) {
 }
 
 func (m *Manager) init(ctx context.Context) error {
-	const createRegisteredQuery = `create table if not exists registered_users (login text primary key, password text)`
+	createRegisteredQuery := `create table if not exists registered_users (login text primary key, password text)`
 	if _, err := m.db.ExecContext(ctx, createRegisteredQuery); err != nil {
 		return fmt.Errorf("error while trying to create table with registered users: %w", err)
 	}
-	const createOrdersQuery = `create table if not exists orders (order_id text unique, login text, uploaded_at timestamp with time zone, status text, accrual double precision, primary key(order_id))`
+	createOrdersQuery := `create table if not exists orders (order_id text unique, login text, uploaded_at timestamp with time zone, status text, accrual double precision, primary key(order_id))`
 	if _, err := m.db.ExecContext(ctx, createOrdersQuery); err != nil {
 		return fmt.Errorf("error while trying to create table with orders: %w", err)
 	}
-	const createWithdrawQuery = `create table if not exists withdraw (login text, order_id text unique, processed_at timestamp with time zone, amount double precision, primary key(login, order_id))`
+	createWithdrawQuery := `create table if not exists withdraw (login text, order_id text unique, processed_at timestamp with time zone, amount double precision, primary key(login, order_id))`
 	if _, err := m.db.ExecContext(ctx, createWithdrawQuery); err != nil {
 		return fmt.Errorf("error while trying to create table with orders: %w", err)
 	}

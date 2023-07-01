@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/kontik-pk/go-musthave-diploma-tpl/cmd/gophermart/internal/models"
+	"github.com/kontik-pk/go-musthave-diploma-tpl/internal/models"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/bcrypt"
 	"regexp"

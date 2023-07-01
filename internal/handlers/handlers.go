@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/kontik-pk/go-musthave-diploma-tpl/cmd/gophermart/internal/database"
-	"github.com/kontik-pk/go-musthave-diploma-tpl/cmd/gophermart/internal/models"
+	"github.com/kontik-pk/go-musthave-diploma-tpl/internal/database"
+	"github.com/kontik-pk/go-musthave-diploma-tpl/internal/models"
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"
@@ -159,7 +159,7 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	expirationTime := time.Now().Add(time.Hour)
-	token, err := h.createToken(user.Login, expirationTime)
+	token, err := createToken(user.Login, expirationTime)
 	if err != nil {
 		h.log.Errorf("error while create token for user: %s", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -197,7 +197,7 @@ func (h *handler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	expirationTime := time.Now().Add(time.Hour)
-	token, err := h.createToken(user.Login, expirationTime)
+	token, err := createToken(user.Login, expirationTime)
 	if err != nil {
 		h.log.Errorf("error while create token for user: %s", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -212,8 +212,8 @@ func (h *handler) Register(w http.ResponseWriter, r *http.Request) {
 	h.log.Info(fmt.Sprintf("user %q is successfully registered and authorized", user.Login))
 }
 
-func (h *handler) BasicAuth(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func (h *handler) BasicAuth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tokenHeader := r.Header.Get("Authorization")
 		if tokenHeader == "" {
 			h.log.Errorf("token is empty")
@@ -241,7 +241,7 @@ func (h *handler) BasicAuth(next http.HandlerFunc) http.HandlerFunc {
 		}
 		w.Header().Add("Authorization", tokenHeader)
 		next.ServeHTTP(w, r)
-	}
+	})
 }
 
 func (h *handler) extractJwtToken(r *http.Request) (*jwt.Token, error) {
@@ -265,21 +265,6 @@ func (h *handler) extractJwtToken(r *http.Request) (*jwt.Token, error) {
 		return nil, err
 	}
 	return tkn, err
-}
-
-func (h *handler) createToken(userName string, expirationTime time.Time) (string, error) {
-	claims := &models.Claims{
-		Username: userName,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(expirationTime),
-		},
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(jwtKey)
-	if err != nil {
-		return "", err
-	}
-	return tokenString, nil
 }
 
 func (h *handler) parseInputUser(r *http.Request) (*models.User, bool) {
@@ -361,4 +346,19 @@ type dbManager interface {
 	LoadOrder(login string, orderID string) error
 	Register(login string, password string) error
 	Login(login string, password string) error
+}
+
+func createToken(userName string, expirationTime time.Time) (string, error) {
+	claims := &models.Claims{
+		Username: userName,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(jwtKey)
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
 }

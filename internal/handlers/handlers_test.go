@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-resty/resty/v2"
-	"github.com/kontik-pk/go-musthave-diploma-tpl/cmd/gophermart/internal/database"
+	"github.com/kontik-pk/go-musthave-diploma-tpl/internal/database"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	"net/http/cookiejar"
@@ -183,8 +183,14 @@ func TestHandler_LoadOrder(t *testing.T) {
 
 		handler := New(manager, &log)
 		r := chi.NewRouter()
-		r.Post("/api/user/orders", handler.BasicAuth(handler.LoadOrder))
-		r.Post("/api/user/register", handler.Register)
+		r.Group(func(r chi.Router) {
+			r.Post("/api/user/register", handler.Register)
+			r.Post("/api/user/login", handler.Login)
+		})
+		r.Group(func(r chi.Router) {
+			r.Use(handler.BasicAuth)
+			r.Post("/api/user/orders", handler.LoadOrder)
+		})
 
 		srv := httptest.NewServer(r)
 		defer srv.Close()
@@ -211,8 +217,14 @@ func TestHandler_LoadOrder(t *testing.T) {
 
 		handler := New(manager, &log)
 		r := chi.NewRouter()
-		r.Post("/api/user/orders", handler.BasicAuth(handler.LoadOrder))
-		r.Post("/api/user/register", handler.Register)
+		r.Group(func(r chi.Router) {
+			r.Post("/api/user/register", handler.Register)
+			r.Post("/api/user/login", handler.Login)
+		})
+		r.Group(func(r chi.Router) {
+			r.Use(handler.BasicAuth)
+			r.Post("/api/user/orders", handler.LoadOrder)
+		})
 
 		srv := httptest.NewServer(r)
 		defer srv.Close()
@@ -238,8 +250,14 @@ func TestHandler_LoadOrder(t *testing.T) {
 
 		handler := New(manager, &log)
 		r := chi.NewRouter()
-		r.Post("/api/user/orders", handler.BasicAuth(handler.LoadOrder))
-		r.Post("/api/user/register", handler.Register)
+		r.Group(func(r chi.Router) {
+			r.Post("/api/user/register", handler.Register)
+			r.Post("/api/user/login", handler.Login)
+		})
+		r.Group(func(r chi.Router) {
+			r.Use(handler.BasicAuth)
+			r.Post("/api/user/orders", handler.LoadOrder)
+		})
 
 		srv := httptest.NewServer(r)
 		defer srv.Close()
@@ -263,8 +281,14 @@ func TestHandler_LoadOrder(t *testing.T) {
 
 		handler := New(manager, &log)
 		r := chi.NewRouter()
-		r.Post("/api/user/orders", handler.BasicAuth(handler.LoadOrder))
-		r.Post("/api/user/register", handler.Register)
+		r.Group(func(r chi.Router) {
+			r.Post("/api/user/register", handler.Register)
+			r.Post("/api/user/login", handler.Login)
+		})
+		r.Group(func(r chi.Router) {
+			r.Use(handler.BasicAuth)
+			r.Post("/api/user/orders", handler.LoadOrder)
+		})
 
 		srv := httptest.NewServer(r)
 		defer srv.Close()
@@ -286,8 +310,14 @@ func TestHandler_LoadOrder(t *testing.T) {
 
 		handler := New(manager, &log)
 		r := chi.NewRouter()
-		r.Post("/api/user/orders", handler.BasicAuth(handler.LoadOrder))
-		r.Post("/api/user/register", handler.Register)
+		r.Group(func(r chi.Router) {
+			r.Post("/api/user/register", handler.Register)
+			r.Post("/api/user/login", handler.Login)
+		})
+		r.Group(func(r chi.Router) {
+			r.Use(handler.BasicAuth)
+			r.Post("/api/user/orders", handler.LoadOrder)
+		})
 
 		srv := httptest.NewServer(r)
 		defer srv.Close()
@@ -323,8 +353,14 @@ func TestHandler_GetOrders(t *testing.T) {
 
 		handler := New(manager, &log)
 		r := chi.NewRouter()
-		r.Get("/api/user/orders", handler.BasicAuth(handler.GetOrders))
-		r.Post("/api/user/register", handler.Register)
+		r.Group(func(r chi.Router) {
+			r.Post("/api/user/register", handler.Register)
+			r.Post("/api/user/login", handler.Login)
+		})
+		r.Group(func(r chi.Router) {
+			r.Use(handler.BasicAuth)
+			r.Get("/api/user/orders", handler.GetOrders)
+		})
 		srv := httptest.NewServer(r)
 		defer srv.Close()
 
@@ -348,8 +384,14 @@ func TestHandler_GetOrders(t *testing.T) {
 
 		handler := New(manager, &log)
 		r := chi.NewRouter()
-		r.Get("/api/user/orders", handler.BasicAuth(handler.GetOrders))
-		r.Post("/api/user/register", handler.Register)
+		r.Group(func(r chi.Router) {
+			r.Post("/api/user/register", handler.Register)
+			r.Post("/api/user/login", handler.Login)
+		})
+		r.Group(func(r chi.Router) {
+			r.Use(handler.BasicAuth)
+			r.Get("/api/user/orders", handler.GetOrders)
+		})
 		srv := httptest.NewServer(r)
 		defer srv.Close()
 
@@ -417,8 +459,14 @@ func TestHandler_Withdraw(t *testing.T) {
 
 			handler := New(manager, &log)
 			r := chi.NewRouter()
-			r.Post("/api/user/balance/withdraw", handler.BasicAuth(handler.Withdraw))
-			r.Post("/api/user/register", handler.Register)
+			r.Group(func(r chi.Router) {
+				r.Post("/api/user/register", handler.Register)
+				r.Post("/api/user/login", handler.Login)
+			})
+			r.Group(func(r chi.Router) {
+				r.Use(handler.BasicAuth)
+				r.Post("/api/user/balance/withdraw", handler.Withdraw)
+			})
 			srv := httptest.NewServer(r)
 			defer srv.Close()
 
@@ -472,8 +520,14 @@ func TestHandler_GetBalance(t *testing.T) {
 
 			handler := New(manager, &log)
 			r := chi.NewRouter()
-			r.Get("/api/user/balance", handler.BasicAuth(handler.GetBalance))
-			r.Post("/api/user/register", handler.Register)
+			r.Group(func(r chi.Router) {
+				r.Post("/api/user/register", handler.Register)
+				r.Post("/api/user/login", handler.Login)
+			})
+			r.Group(func(r chi.Router) {
+				r.Use(handler.BasicAuth)
+				r.Get("/api/user/balance", handler.GetBalance)
+			})
 			srv := httptest.NewServer(r)
 			defer srv.Close()
 
@@ -534,8 +588,14 @@ func TestHandler_GetWithdrawals(t *testing.T) {
 
 			handler := New(manager, &log)
 			r := chi.NewRouter()
-			r.Get("/api/user/withdrawals", handler.BasicAuth(handler.GetWithdrawals))
-			r.Post("/api/user/register", handler.Register)
+			r.Group(func(r chi.Router) {
+				r.Post("/api/user/register", handler.Register)
+				r.Post("/api/user/login", handler.Login)
+			})
+			r.Group(func(r chi.Router) {
+				r.Use(handler.BasicAuth)
+				r.Get("/api/user/withdrawals", handler.GetWithdrawals)
+			})
 			srv := httptest.NewServer(r)
 			defer srv.Close()
 

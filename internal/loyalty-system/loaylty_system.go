@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-resty/resty/v2"
-	"github.com/kontik-pk/go-musthave-diploma-tpl/cmd/gophermart/internal/models"
+	"github.com/kontik-pk/go-musthave-diploma-tpl/internal/models"
 	"go.uber.org/zap"
 )
 

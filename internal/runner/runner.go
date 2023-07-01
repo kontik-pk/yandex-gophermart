@@ -3,7 +3,7 @@ package runner
 import (
 	"context"
 	"fmt"
-	"github.com/kontik-pk/go-musthave-diploma-tpl/cmd/gophermart/internal/loyalty-system"
+	"github.com/kontik-pk/go-musthave-diploma-tpl/internal/loyalty-system"
 	"go.uber.org/zap"
 	"net/http"
 	"os"
@@ -11,6 +11,20 @@ import (
 	"syscall"
 	"time"
 )
+
+type Runner struct {
+	log                 *zap.SugaredLogger
+	server              *http.Server
+	loyaltyPointsSystem *loyalty.LoyaltySystem
+}
+
+func New(server *http.Server, loyaltyPointsSystem *loyalty.LoyaltySystem, log *zap.SugaredLogger) *Runner {
+	return &Runner{
+		server:              server,
+		log:                 log,
+		loyaltyPointsSystem: loyaltyPointsSystem,
+	}
+}
 
 func (r *Runner) Run(ctx context.Context) error {
 	sig := make(chan os.Signal, 1)
@@ -52,18 +66,4 @@ func (r *Runner) actualizeOrdersInfo(ctx context.Context) {
 			}
 		}
 	}
-}
-
-func New(server *http.Server, loyaltyPointsSystem *loyalty.LoyaltySystem, log *zap.SugaredLogger) *Runner {
-	return &Runner{
-		server:              server,
-		log:                 log,
-		loyaltyPointsSystem: loyaltyPointsSystem,
-	}
-}
-
-type Runner struct {
-	log                 *zap.SugaredLogger
-	server              *http.Server
-	loyaltyPointsSystem *loyalty.LoyaltySystem
 }

@@ -43,10 +43,16 @@ type Credentials struct {
 	Username string `json:"login"`
 }
 
-type Option func(params *Params)
+type Option func(params *Config)
 
-type Params struct {
-	ServerRunAddr        string
-	DatabaseAddress      string
-	AccrualSystemAddress string
+type Config struct {
+	Server struct {
+		Address string
+	}
+	Database struct {
+		ConnectionString string
+	}
+	AccrualSystem struct {
+		Address string
+	}
 }
